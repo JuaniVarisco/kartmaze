@@ -6,4 +6,4 @@ Se va a poder rotar la dirección del vehículo, con distintas variaciones angul
 
 Como se vería el juego:
 
-![juego](https://github.com/user-attachments/assets/cd1b03ea-cbbf-4702-a0f8-765ae7d23ed0)
+![Coba](https://github.com/user-attachments/assets/225c73cb-85e0-4d75-8ddb-5ff94880ab57)

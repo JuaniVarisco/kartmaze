@@ -5,5 +5,4 @@ Controles:
 Se va a poder rotar la dirección del vehículo, con distintas variaciones angulares entre 0 y 90 utilizando las teclas <- y ->, también se va a poder acelerar y desacelerar con las flechas hacia arriba y hacia abajo.
 
 Como se vería el juego:
-
-![Coba](https://github.com/user-attachments/assets/225c73cb-85e0-4d75-8ddb-5ff94880ab57)
+![Boceto_Juego](https://github.com/user-attachments/assets/839d48e1-ab67-4a7e-a898-ae9234ca7df1)

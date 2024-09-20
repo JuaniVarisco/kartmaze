@@ -20,6 +20,7 @@ largo_rect_blanco .FILL	#25
 largo_loop .FILL #31
 inicio_rect .FILL xB33F
 seis .FILL	#6
+zeros .FILL xC000
 SALTO2
 
 FILA_FONDO  ;Genera del fondo, hace una linea y se repite 128 veces.

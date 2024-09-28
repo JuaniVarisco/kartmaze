@@ -1,82 +1,94 @@
-.ORIG x3000
+.ORIG x3000 ;Establece la dirección de origen del programa
 
-LD R0, primer_pixel
-LD R1, color_pasto
-LD R2, grosor_pasto
-LD R4, altura
-LD R5, color_gris
-LD R6, color_white
 
-BRnzp SALTO2 
-primer_pixel .FILL xC000
-grosor_pasto .FILL #31
-color_pasto .FILL x1EE0 ;0 00111 10111 00000
-grosor_pav .FILL #20
-grosor_nopasto .FILL #66
-color_gris .FILL x4210
-altura .FILL #124
-color_white .FILL x7FFF
-largo_rect_blanco .FILL	#25
-largo_loop .FILL #31
-inicio_rect .FILL xB33F
-seis .FILL	#6
-zeros .FILL xC000
-SALTO2
+LD R0, primer_pixel	; Cargar la dirección del primer píxel en el registro R0
+LD R1, color_pasto	; Cargar el color del pasto en el registro R1
+LD R2, grosor_pasto 	; Cargar el grosor del pasto en el registro R2
+LD R4, altura 		; Cargar la altura de la representación gráfica en el registro R4
+LD R5, color_gris	; Cargar el color gris en el registro R5
+LD R6, color_white	; Cargar el color blanco en el registro R6
 
+
+
+BRnzp SALTO2 	; Salta a la etiqueta SALTO2 si el resultado de la operación anterior no es cero
+
+; Definiciones de variables y constantes
+primer_pixel .FILL xC000	; Dirección del primer píxel (en memoria)
+grosor_pasto .FILL #31		; Grosor del pasto (valor numérico)
+color_pasto .FILL x1EE0 	; Color del pasto, 0 00111 10111 00000 (código de color en binario)
+grosor_pav .FILL #20		; Grosor del pavimento (valor numérico)
+grosor_nopasto .FILL #66 	; Grosor de áreas sin pasto (valor numérico)
+color_gris .FILL x4210 		; Color gris (código de color)
+altura .FILL #124 		; Altura de la representación gráfica
+color_white .FILL x7FFF 	; Color blanco (código de color)
+largo_rect_blanco .FILL	#25 	; Largo de rectángulo blanco (valor numérico)
+largo_loop .FILL #31		; Largo de un bucle (valor numérico)
+inicio_rect .FILL xB33F		; Dirección de inicio de un rectángulo (en memoria)
+seis .FILL	#6 		; Valor constante seis
+zeros .FILL xC000 		; Dirección para ceros (en memoria)
+
+SALTO2		; Etiqueta para el salto
+
+
+
+;Generación del fondo
 FILA_FONDO  ;Genera del fondo, hace una linea y se repite 128 veces.
 
-LD R2, grosor_pasto
-LOOP_PASTO
-STR R1, R0, #0
-ADD R0, R0, #1
-ADD R2, R2, #-1
-BRp LOOP_PASTO
+LD R2, grosor_pasto 	; Cargar grosor del pasto en R2
+LOOP_PASTO 		; Bucle que pinta el pasto en la pantalla, almacenando el color cargado en R1 en direcciones de memoria consecutivas.
+STR R1, R0, #0 		; Almacenar el color del pasto en la dirección de R0
+ADD R0, R0, #1		; Incrementar R0 para el siguiente píxel
+ADD R2, R2, #-1		; Decrementar el grosor
+BRp LOOP_PASTO 		; Repetir hasta que R2 llegue a cero
 
-STR R6, R0, #0
+
+;Generación del pavimento
+STR R6, R0, #0 		; Almacenar color blanco en la dirección de R0
 LD R3, grosor_pav
 LOOP_PAV1
-ADD R0, R0, #1
-STR R5, R0, #0
-ADD R3, R3, #-1
-BRp LOOP_PAV1
+ADD R0, R0, #1		; Incrementar R0
+STR R5, R0, #0		; Almacenar color gris
+ADD R3, R3, #-1		; Decrementar grosor del pavimento
+BRp LOOP_PAV1		; Repetir hasta que R3 llegue a cero
+
 
 ADD R0, R0, #1
-STR R6, R0, #0
+STR R6, R0, #0 		; Almacenar blanco para separar en la pantalla
 
 LD R3, grosor_pav
-ADD R3, R3, #2 
+ADD R3, R3, #2 		; Ajustar grosor
 LOOP_PAV2
 ADD R0, R0, #1
-STR R5, R0, #0
+STR R5, R0, #0		; Almacenar gris nuevamente
 ADD R3, R3, #-1
 BRp LOOP_PAV2
 
 ADD R0, R0, #1
-STR R6, R0, #0
+STR R6, R0, #0		; Almacenar blanco
 
 LD R3, grosor_pav
 LOOP_PAV3
 ADD R0, R0, #1
-STR R5, R0, #0
+STR R5, R0, #0		; Almacenar gris
 ADD R3, R3, #-1
-BRp LOOP_PAV3
+BRp LOOP_PAV3		; Repetir hasta que R3 llegue a cero
 
 ADD R0, R0, #1
-STR R6, R0, #0
+STR R6, R0, #0		; Almacenar blanco
 
 LD R2, grosor_pasto
 LOOP_PASTO1
 ADD R0, R0, #1
-STR R1, R0, #0
+STR R1, R0, #0		; Almacenar el color del pasto
 ADD R2, R2, #-1
 BRp LOOP_PASTO1
 
-ADD R0, R0, #1
-ADD R4,R4,#-1
-BRp FILA_FONDO
+ADD R0, R0, #1		; Incrementar para la siguiente fila
+ADD R4,R4,#-1		; Decrementar altura
+BRp FILA_FONDO		; Repetir hasta que la altura llegue a cero
 BRnzp SALTOO
 
-
+; Reservas de memoria para guardar registros
 GUARDARR_R0      .BLKW 1
 GUARDARR_R1      .BLKW 1
 GUARDARR_R2      .BLKW 1

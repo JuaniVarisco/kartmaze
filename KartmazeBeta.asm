@@ -32,14 +32,14 @@ SALTO2		; Etiqueta para el salto
 
 
 ;Generación del fondo
-FILA_FONDO  ;Genera del fondo, hace una linea y se repite 128 veces.
+FILA_FONDO  ;Genera el fondo, hace una linea y se repite 128 veces.
 
 LD R2, grosor_pasto 	; Cargar grosor del pasto en R2
 LOOP_PASTO 		; Bucle que pinta el pasto en la pantalla, almacenando el color cargado en R1 en direcciones de memoria consecutivas.
 STR R1, R0, #0 		; Almacenar el color del pasto en la dirección de R0
 ADD R0, R0, #1		; Incrementar R0 para el siguiente píxel
 ADD R2, R2, #-1		; Decrementar el grosor
-BRp LOOP_PASTO 		; Repetir hasta que R2 llegue a cero
+BRp LOOP_PASTO 		; Repetir hasta que R2 llegue a cero, completandose la linea de pasto
 
 
 ;Generación del pavimento
@@ -96,9 +96,11 @@ GUARDARR_R7      .BLKW 1
 
 ;Las lineas blancas que separan las filas se recargan cada vez que el auto se mueve
 RECARGAR_CARRILES
+;Guardar los valores de los registros en memoria temporal
 ST R0,GUARDARR_R0
 ST R1,GUARDARR_R1
 ST R2,GUARDARR_R2
+; Carga de valores iniciales para comenzar el proceso de recarga de los carriles
 LD R0, zeros
 LD R1, color_pasto
 LD R2, grosor_pasto
@@ -129,7 +131,7 @@ LD R0,GUARDARR_R0
 LD R1,GUARDARR_R1
 LD R2,GUARDARR_R2
 RET
-esp_entre_rect .FILL #642
+esp_entre_rect .FILL #642	; Espacio entre los rectángulos blancos en los carriles
 ;GUARDAR_R0      .BLKW 1
 GUARDAR_R7      .BLKW 1
 SALTOO
@@ -159,6 +161,7 @@ STR R5, R1,#-1
 STR R5, R1,#-2
 ADD R1,R1,R3
 ADD R1,R1,#4
+; Bucle para crear los rectángulos blancos
 LOOP_RECT2
 LD R2, seis
 LOOP_RECT
@@ -171,7 +174,7 @@ ADD R0,R0,#-1 ;a
 BRp LOOP_RECT2
 ST R7,GUARDARR_R7
 LD R0, GUARDARR_R0
-JSR MOVER_AUTO
+JSR MOVER_AUTO 			; Llama a la función para mover el auto
 ST R0, GUARDARR_R0
 LD R7,GUARDARR_R7
 ADD R1, R1,R4
@@ -186,69 +189,72 @@ RET
 ESPERALETRA
 	LD R1, inicio_rect
 	LD R2, largo_loop
-	PIXEL ;Loop principal, cada vuelta es un frame del juego
+	PIXEL 			;Loop principal, cada vuelta es un frame del juego
 	JSR CARRIL_MEDIO
 	JSR MOVER_AUTO
-	LDI R5,WAITKB  ;WAITKB es la direccion del registro que cuando se presiona una tecla, se cambia a 1 el bit 15
-	BRn MOVER
-	MOVER2          ;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
+	LDI R5,WAITKB  		;WAITKB es la direccion del registro que cuando se presiona una tecla, se cambia a 1 el bit 15
+	BRn MOVER		;Si no se ha presionado ninguna tecla (el bit 15 está en 0), salta a la etiqueta MOVER
+	MOVER2          	;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
 	LD R4, color_rojo_osc
 	espera
 	ADD R4,R4,#-5
 	BRp espera
-	JSR MOVER_AUTO
+	JSR MOVER_AUTO		;Llama a una subrutina que actualiza la posición del auto.
 	LD R3, grosor_pantalla
 	ADD R1,R1,R3
 	ADD R2,R2,#-1
 	BRp PIXEL
 	BRnzp ESPERALETRA
 
-MOVER
-LDI R4,TECLADO ;TECALDO es la direccion del registro que guarda el valor ASCII de la tecla que se presionó
-LD R3, letraDneg
-ADD R4 ,R4, R3
-BRz DERECHA
+MOVER		
+LDI R4,TECLADO			 ;TECALDO es la direccion del registro que guarda el valor ASCII de la tecla que se presionó
+LD R3, letraDneg		 ;Carga un valor asociado a la tecla de movimiento negativo hacia la derecha
+ADD R4 ,R4, R3			 ;Si el resultado es cero (BRz DERECHA), significa que se ha presionado la tecla para mover el auto a la derecha
+BRz DERECHA			 
 LD R3, letraDpos
 ADD R4 ,R4, R3
-LD R3, letraAneg
-ADD R4 ,R4, R3
+LD R3, letraAneg		;Carga un valor asociado a la tecla de movimiento negativo hacia la izquierda.
+ADD R4 ,R4, R3			;Suma este valor a R4. Si el resultado es cero (BRz IZQUIERDA), salta a la etiqueta IZQUIERDA
 BRz IZQUIERDA
 LD R3, letraApos
 ADD R4 ,R4, R3
-LD R3, letraSneg
-ADD R4 ,R4, R3
+LD R3, letraSneg		;Carga un valor para movimiento negativo hacia abajo.
+ADD R4 ,R4, R3			;Suma este valor a R4. Si es cero (BRz ABAJO), salta a la etiqueta ABAJO
 BRz ABAJO
 LD R3, letraSpos
 ADD R4 ,R4, R3
 LD R3, letraWneg
 ADD R4 ,R4, R3
 BRz ARRIBA
-BRnzp MOVER2
+BRnzp MOVER2			;Si R4 no es cero, se regresa al bucle MOVER2, que controla el tiempo de espera entre cada acción
 
-inicio_auto .FILL xF23A
+inicio_auto .FILL xF23A		; Se reserva un espacio en memoria para almacenar la dirección de inicio del auto
 
-DERECHA
+DERECHA				; Etiqueta que marca el comienzo de la lógica para mover el auto hacia la derecha
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 ADD R0,R0,#2
 JSR MOVER_AUTO
 BRnzp VERIFICAR_COL
 BRnzp MOVER2
-IZQUIERDA
+
+IZQUIERDA			; Etiqueta que marca el comienzo de la lógica para mover el auto hacia la izquierda
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 ADD R0,R0,#-2
 JSR MOVER_AUTO
 BRnzp VERIFICAR_COL
 BRnzp MOVER2
-ABAJO
+
+ABAJO				; Etiqueta que marca el comienzo de la lógica para mover el auto hacia abajo
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 LD R4, abajo
 ADD R0,R0,R4
 JSR MOVER_AUTO
 BRnzp MOVER2
-ARRIBA
+
+ARRIBA				; Etiqueta que marca el comienzo de la lógica para mover el auto hacia arriba
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 LD R4, subir

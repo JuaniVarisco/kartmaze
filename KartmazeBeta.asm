@@ -109,6 +109,9 @@ LD R4, altura
 LD R5, color_gris
 LD R6, color_white
 
+
+;vuelta dibuja un conjunto de rectángulos blancos y ajusta la posición y grosor de los carriles en un bucle,
+;              reduciendo la altura en cada iteración hasta que la condición del bucle ya no se cumpla
 VUELTA
 ADD R0,R0,R2
 STR R6, R0, #0
@@ -138,7 +141,7 @@ SALTOO
 LD R0, inicio_auto
 BRnzp ESPERALETRA
 
-;Esta función genera los rectangulos de carril del medio 
+;carril_medio genera los rectangulos de carril del medio 
 CARRIL_MEDIO
 ST R0,GUARDARR_R0
 ST R1,GUARDARR_R1
@@ -186,6 +189,8 @@ LD R1, GUARDARR_R1
 LD R7, GUARDAR_R7
 RET
 
+; esperaletra controla el bucle principal del juego, llamando a las subrutinas de movimiento del auto y de los carriles,
+;              y esperando la entrada del teclado para continuar.
 ESPERALETRA
 	LD R1, inicio_rect
 	LD R2, largo_loop
@@ -206,6 +211,9 @@ ESPERALETRA
 	BRp PIXEL
 	BRnzp ESPERALETRA
 
+; MOVER: Controla el movimiento del auto basado en la entrada del teclado.
+; Input: R0 - Posición actual del auto
+; Output: R0 - Nueva posición del auto después del movimiento
 MOVER		
 LDI R4,TECLADO			 ;TECALDO es la direccion del registro que guarda el valor ASCII de la tecla que se presionó
 LD R3, letraDneg		 ;Carga un valor asociado a la tecla de movimiento negativo hacia la derecha
@@ -230,7 +238,10 @@ BRnzp MOVER2			;Si R4 no es cero, se regresa al bucle MOVER2, que controla el ti
 
 inicio_auto .FILL xF23A		; Se reserva un espacio en memoria para almacenar la dirección de inicio del auto
 
-DERECHA				; Etiqueta que marca el comienzo de la lógica para mover el auto hacia la derecha
+;Lógica para mover el auto hacia la derecha.
+; Input: R0: Posición actual del auto.
+; Output: R0: Posición actualizada del auto después de moverse hacia la derecha.
+DERECHA				
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 ADD R0,R0,#2
@@ -238,7 +249,10 @@ JSR MOVER_AUTO
 BRnzp VERIFICAR_COL
 BRnzp MOVER2
 
-IZQUIERDA			; Etiqueta que marca el comienzo de la lógica para mover el auto hacia la izquierda
+;Lógica para mover el auto hacia la izquierda.
+; Input: R0: Posición actual del auto.
+; Output: R0: Posición actualizada del auto después de moverse hacia la izquierda.
+IZQUIERDA			
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 ADD R0,R0,#-2
@@ -246,7 +260,10 @@ JSR MOVER_AUTO
 BRnzp VERIFICAR_COL
 BRnzp MOVER2
 
-ABAJO				; Etiqueta que marca el comienzo de la lógica para mover el auto hacia abajo
+;Lógica para mover el auto hacia abajo.
+; Input: R0: Posición actual del auto.
+; Output: R0: Posición actualizada del auto después de moverse hacia abajo.
+ABAJO				
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 LD R4, abajo
@@ -254,7 +271,10 @@ ADD R0,R0,R4
 JSR MOVER_AUTO
 BRnzp MOVER2
 
-ARRIBA				; Etiqueta que marca el comienzo de la lógica para mover el auto hacia arriba
+;Lógica para mover el auto hacia arriba.
+; Input: R0: Posición actual del auto.
+; Output: R0: Posición actualizada del auto después de moverse hacia arriba.
+ARRIBA				
 JSR RECARGAR_CARRILES
 JSR BORRAR_AUTO
 LD R4, subir
@@ -262,7 +282,10 @@ ADD R0,R0,R4
 JSR MOVER_AUTO
 BRnzp MOVER2
 
-;la función verifica si el auto pisa el pasto
+
+; VERIFICAR_COL: Verifica si el auto ha colisionado con un obstáculo.
+; Input: R0 - Posición del auto, R1 - Posición del obstáculo
+; Output: R0 - 1 si hay colisión, 0 si no
 VERIFICAR_COL
 ST R1, GUARDAR_R1
 LD R1,columna
@@ -279,7 +302,18 @@ BRnzp MOVER2
 GAME_OVER
 HALT
 
-;BORRAR_AUTO "pinta" el auto pero del color de la calle 
+; BORRAR_AUTO: "Pinta" el auto pero del color de la calle.
+; Input: 
+;   R0 - Posición actual del auto (coordenadas en pantalla)
+;   R1 - Color actual (se almacena el color de la calle)
+;   R2 - Color actual (se almacena el color de la calle)
+;   R3 - Color actual (se almacena el color de la calle)
+; Output:
+;   R0 - Posición del auto (sin cambios)
+;   R1 - Color gris (color de la calle)
+;   R2 - Color gris (color de la calle)
+;   R3 - Color gris (color de la calle)
+;   R4 - Grosor de la pantalla (se carga desde grosor_pantalla)
 BORRAR_AUTO
 ST R1,GUARDAR_R1
 ST R2,GUARDAR_R2
@@ -287,6 +321,19 @@ LD R1, color_gris
 LD R2, color_gris
 LD R3, color_gris
 BRnzp SALTO
+
+; MOVER_AUTO: Pinta el auto desde la dirección guardada en R0.
+; Input: 
+;   R0 - Posición actual del auto (coordenadas en pantalla)
+;   R1 - Color a utilizar (se guarda antes de actualizar)
+;   R2 - Color a utilizar (se guarda antes de actualizar)
+;   R3 - Color a utilizar (se guarda antes de actualizar)
+; Output:
+;   R0 - Posición del auto (sin cambios)
+;   R1 - Color rojo oscuro (se carga desde color_rojo_osc)
+;   R2 - Color rojo claro (se carga desde color_rojo_cla)
+;   R3 - Color negro (se carga desde color_negro)
+;   R4 - Grosor de la pantalla (se carga desde grosor_pantalla)
 MOVER_AUTO ;Pinta el auto desde la direccion guardada en R0
 ST R0,GUARDAR_R0
 ST R1,GUARDAR_R1

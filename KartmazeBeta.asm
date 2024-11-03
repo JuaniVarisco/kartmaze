@@ -26,6 +26,7 @@ largo_loop .FILL #31		; Largo de un bucle (valor numérico)
 inicio_rect .FILL xB33F		; Dirección de inicio de un rectángulo (en memoria)
 seis .FILL	#6 		; Valor constante seis
 zeros .FILL xC000 		; Dirección para ceros (en memoria)
+cero .FILL #0
 
 SALTO2		; Etiqueta para el salto
 
@@ -139,8 +140,15 @@ esp_entre_rect .FILL #642	; Espacio entre los rectángulos blancos en los carril
 ;GUARDAR_R0      .BLKW 1
 GUARDAR_R7      .BLKW 1
 GUARDAR_CONO 	.BLKW 1
+
 SALTOO
 LD R0, inicio_auto
+LD R3,carril_derecha
+ST R3,GUARDAR_CONO
+LD R5,altura
+ADD R5,R5,#14
+ST R5,GUARDAR_CONTADOR
+LD R6, cero
 BRnzp ESPERALETRA
 
 ;carril_medio genera los rectangulos de carril del medio 
@@ -193,16 +201,32 @@ LD R3,GUARDARR_R3
 LD R7, GUARDAR_R7
 RET
 
+carril_derecha .FILL xBBD2
+carril_centro .FILL xBBBB
+carril_izquierdo .FILL xBBA6
+
+GUARDAR_CONTADOR .BLKW 1
+
+CADA128FRAMES
+LD R3, carril_derecha
+ST R3, GUARDAR_CONO
+LD R5, grosor_pantalla
+ADD R5,R5, #10
+ST R5, GUARDAR_CONTADOR
+RET
+
 ; esperaletra controla el bucle principal del juego, llamando a las subrutinas de movimiento del auto y de los carriles,
 ;              y esperando la entrada del teclado para continuar.
 ESPERALETRA
 	LD R1, inicio_rect
 	LD R2, largo_loop
-	LD R3, carril_derecha
-	ST R3, GUARDAR_CONO
+
 	PIXEL ;Loop principal, cada vuelta es un frame del juego
 	JSR CARRIL_MEDIO
 	JSR MOVER_AUTO
+	LD R3,GUARDAR_CONO
+	JSR DIBUJAR_CONO
+	ST R3, GUARDAR_CONO
 
 	LD R3,GUARDAR_CONO
 	JSR BORRAR_CONO
@@ -210,14 +234,23 @@ ESPERALETRA
 	ADD R3,R3,R4
 	JSR DIBUJAR_CONO
 	ST R3, GUARDAR_CONO
+	LD R5, GUARDAR_CONTADOR 
+	ADD R5,R5,#-1
+	BRnp SIGUE
+	JSR CADA128FRAMES
+	SIGUE
+	ST R5, GUARDAR_CONTADOR
+
 
 	LDI R5,WAITKB  ;WAITKB es la direccion del registro que cuando se presiona una tecla, se cambia a 1 el bit 15
 	BRn MOVER
+
 	MOVER2          ;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
 	LD R4, color_rojo_osc
 	espera
 	ADD R4,R4,#-5
 	BRp espera
+
 	JSR MOVER_AUTO
 	LD R3, grosor_pantalla
 	ADD R1,R1,R3
@@ -251,7 +284,7 @@ BRz ARRIBA
 BRnzp MOVER2			;Si R4 no es cero, se regresa al bucle MOVER2, que controla el tiempo de espera entre cada acción
 
 inicio_auto .FILL xF23A		; Se reserva un espacio en memoria para almacenar la dirección de inicio del auto
-
+grosor_pantalla.FILL #128
 ;Lógica para mover el auto hacia la derecha.
 ; Input: R0: Posición actual del auto.
 ; Output: R0: Posición actualizada del auto después de moverse hacia la derecha.
@@ -513,7 +546,8 @@ GUARDAR_R4      .BLKW 1
 GUARDAR_R5      .BLKW 1
 GUARDAR_R6      .BLKW 1
 
-carril_derecha .FILL xC050
+
+
 TECLADO .FILL xFE02
 letraDneg .FILL #-100
 letraDpos .FILL #100
@@ -524,7 +558,6 @@ letraSpos .FILL #115
 letraWneg .FILL #-119
 letraWpos .FILL #119
 WAITKB	.FILL xFE00	
-grosor_pantalla.FILL #128
 color_negro .FILL x0000
 color_rojo_osc .FILL x4000
 color_rojo_cla .FILL x7C00

@@ -92,6 +92,7 @@ BRnzp SALTOO
 GUARDARR_R0      .BLKW 1
 GUARDARR_R1      .BLKW 1
 GUARDARR_R2      .BLKW 1
+GUARDARR_R3      .BLKW 1
 GUARDARR_R7      .BLKW 1
 
 ;Las lineas blancas que separan las filas se recargan cada vez que el auto se mueve
@@ -137,6 +138,7 @@ RET
 esp_entre_rect .FILL #642	; Espacio entre los rectángulos blancos en los carriles
 ;GUARDAR_R0      .BLKW 1
 GUARDAR_R7      .BLKW 1
+GUARDAR_CONO 	.BLKW 1
 SALTOO
 LD R0, inicio_auto
 BRnzp ESPERALETRA
@@ -146,6 +148,7 @@ CARRIL_MEDIO
 ST R0,GUARDARR_R0
 ST R1,GUARDARR_R1
 ST R2,GUARDARR_R2
+ST R3,GUARDARR_R3
 ST R7,GUARDAR_R7
 LD R3, altura
 LD R4, esp_entre_rect
@@ -186,6 +189,7 @@ BRp LOOP_RECT3
 LD R0, GUARDARR_R0
 LD R2, GUARDARR_R2
 LD R1, GUARDARR_R1
+LD R3,GUARDARR_R3
 LD R7, GUARDAR_R7
 RET
 
@@ -194,17 +198,27 @@ RET
 ESPERALETRA
 	LD R1, inicio_rect
 	LD R2, largo_loop
-	PIXEL 			;Loop principal, cada vuelta es un frame del juego
+	LD R3, carril_derecha
+	ST R3, GUARDAR_CONO
+	PIXEL ;Loop principal, cada vuelta es un frame del juego
 	JSR CARRIL_MEDIO
 	JSR MOVER_AUTO
-	LDI R5,WAITKB  		;WAITKB es la direccion del registro que cuando se presiona una tecla, se cambia a 1 el bit 15
-	BRn MOVER		;Si no se ha presionado ninguna tecla (el bit 15 está en 0), salta a la etiqueta MOVER
-	MOVER2          	;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
+
+	LD R3,GUARDAR_CONO
+	JSR BORRAR_CONO
+	LD R4, grosor_pantalla
+	ADD R3,R3,R4
+	JSR DIBUJAR_CONO
+	ST R3, GUARDAR_CONO
+
+	LDI R5,WAITKB  ;WAITKB es la direccion del registro que cuando se presiona una tecla, se cambia a 1 el bit 15
+	BRn MOVER
+	MOVER2          ;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
 	LD R4, color_rojo_osc
 	espera
 	ADD R4,R4,#-5
 	BRp espera
-	JSR MOVER_AUTO		;Llama a una subrutina que actualiza la posición del auto.
+	JSR MOVER_AUTO
 	LD R3, grosor_pantalla
 	ADD R1,R1,R3
 	ADD R2,R2,#-1
@@ -317,6 +331,8 @@ HALT
 BORRAR_AUTO
 ST R1,GUARDAR_R1
 ST R2,GUARDAR_R2
+ST R3,GUARDAR_R3
+ST R4,GUARDAR_R4
 LD R1, color_gris
 LD R2, color_gris
 LD R3, color_gris
@@ -497,7 +513,7 @@ GUARDAR_R4      .BLKW 1
 GUARDAR_R5      .BLKW 1
 GUARDAR_R6      .BLKW 1
 
-
+carril_derecha .FILL xC050
 TECLADO .FILL xFE02
 letraDneg .FILL #-100
 letraDpos .FILL #100
@@ -508,13 +524,122 @@ letraSpos .FILL #115
 letraWneg .FILL #-119
 letraWpos .FILL #119
 WAITKB	.FILL xFE00	
+grosor_pantalla.FILL #128
 color_negro .FILL x0000
 color_rojo_osc .FILL x4000
 color_rojo_cla .FILL x7C00
-
-grosor_pantalla.FILL #128
+color_naranja .FILL x7A00   
+color_naranja_osc .FILL x5100
+color_white2 .FILL x7FFF
+color_gris2 .FILL x4210
 abajo.FILL #256
 subir.FILL #-256
 columna.FILL x00FF
 columna_der_neg .FILL #-88
 columna_izq_neg .FILL #-30
+
+
+
+BORRAR_CONO
+ST R0,GUARDAR_R0
+ST R1,GUARDAR_R1
+ST R2,GUARDAR_R2
+ST R3,GUARDAR_R3
+ST R4,GUARDAR_R4
+LD R0, color_gris2
+LD R1, color_gris2
+LD R2,color_gris2
+BRnzp SALTAR
+DIBUJAR_CONO ;dibuja un cono desde R3
+ST R0,GUARDAR_R0
+ST R1,GUARDAR_R1
+ST R2,GUARDAR_R2
+ST R3,GUARDAR_R3
+ST R4,GUARDAR_R4
+LD R0, color_naranja
+LD R1, color_naranja_osc
+LD R2,color_white2
+SALTAR
+LD R4, grosor_pantalla
+STR R0,R3,#4
+ADD R3,R3,R4
+STR R0,R3,#4
+ADD R3,R3,R4
+STR R0,R3,#3
+STR R0,R3,#4
+STR R0,R3,#5
+ADD R3,R3,R4
+STR R2,R3,#3
+STR R2,R3,#4
+STR R2,R3,#5
+ADD R3,R3,R4
+STR R0,R3,#2
+STR R0,R3,#3
+STR R0,R3,#4
+STR R0,R3,#5
+STR R0,R3,#6
+ADD R3,R3,R4
+STR R0,R3,#2
+STR R0,R3,#3
+STR R0,R3,#4
+STR R0,R3,#5
+STR R0,R3,#6
+ADD R3,R3,R4
+STR R0,R3,#1
+STR R2,R3,#2
+STR R2,R3,#3
+STR R2,R3,#4
+STR R2,R3,#5
+STR R2,R3,#6
+STR R0,R3,#7
+ADD R3,R3,R4
+STR R0,R3,#0
+STR R0,R3,#1
+STR R0,R3,#2
+STR R0,R3,#3
+STR R0,R3,#4
+STR R0,R3,#5
+STR R0,R3,#6
+STR R0,R3,#7
+STR R0,R3,#8
+ADD R3,R3,R4
+STR R1,R3,#0
+STR R2,R3,#1
+STR R0,R3,#2
+STR R0,R3,#3
+STR R0,R3,#4
+STR R0,R3,#5
+STR R0,R3,#6
+STR R2,R3,#7
+STR R1,R3,#8
+ADD R3,R3,R4
+STR R0,R3,#0
+STR R1,R3,#1
+STR R2,R3,#2
+STR R2,R3,#3
+STR R2,R3,#4
+STR R2,R3,#5
+STR R2,R3,#6
+STR R1,R3,#7
+STR R0,R3,#8
+ADD R3,R3,R4
+STR R0,R3,#1
+STR R1,R3,#2
+STR R1,R3,#3
+STR R1,R3,#4
+STR R1,R3,#5
+STR R1,R3,#6
+STR R0,R3,#7
+ADD R3,R3,R4
+STR R0,R3,#2
+STR R0,R3,#3
+STR R0,R3,#4
+STR R0,R3,#5
+STR R0,R3,#6
+
+LD R0,GUARDAR_R0
+LD R1,GUARDAR_R1
+LD R2,GUARDAR_R2
+LD R3,GUARDAR_R3
+LD R4,GUARDAR_R4
+RET

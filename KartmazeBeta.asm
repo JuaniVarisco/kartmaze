@@ -18,7 +18,7 @@ grosor_pasto .FILL #31		; Grosor del pasto (valor numérico)
 color_pasto .FILL x1EE0 	; Color del pasto, 0 00111 10111 00000 (código de color en binario)
 grosor_pav .FILL #20		; Grosor del pavimento (valor numérico)
 grosor_nopasto .FILL #66 	; Grosor de áreas sin pasto (valor numérico)
-color_gris .FILL x4210 		; Color gris (código de color)
+
 altura .FILL #124 		; Altura de la representación gráfica
 color_white .FILL x7FFF 	; Color blanco (código de color)
 largo_rect_blanco .FILL	#25 	; Largo de rectángulo blanco (valor numérico)
@@ -26,7 +26,7 @@ largo_loop .FILL #31		; Largo de un bucle (valor numérico)
 inicio_rect .FILL xB33F		; Dirección de inicio de un rectángulo (en memoria)
 seis .FILL	#6 		; Valor constante seis
 zeros .FILL xC000 		; Dirección para ceros (en memoria)
-cero .FILL #0
+cero .FILL #1
 
 SALTO2		; Etiqueta para el salto
 
@@ -140,15 +140,17 @@ esp_entre_rect .FILL #642	; Espacio entre los rectángulos blancos en los carril
 ;GUARDAR_R0      .BLKW 1
 GUARDAR_R7      .BLKW 1
 GUARDAR_CONO 	.BLKW 1
+QUECARRIL		.BLKW 1
 
 SALTOO
 LD R0, inicio_auto
-LD R3,carril_derecha
+LD R3,carril_izquierdo
 ST R3,GUARDAR_CONO
 LD R5,altura
 ADD R5,R5,#14
 ST R5,GUARDAR_CONTADOR
-LD R6, cero
+LD R6, cero ;ES 1
+ST R6, QUECARRIL
 BRnzp ESPERALETRA
 
 ;carril_medio genera los rectangulos de carril del medio 
@@ -208,7 +210,33 @@ carril_izquierdo .FILL xBBA6
 GUARDAR_CONTADOR .BLKW 1
 
 CADA128FRAMES
+
+LD R6, QUECARRIL
+ADD R6,R6,#-1
+BRz derecha
+ADD R6,R6,#-1
+BRz centro
+ADD R6,R6,#-1
+BRz izquierda
+
+derecha
 LD R3, carril_derecha
+ADD R6,R6,#2
+ST R6, QUECARRIL
+BRnzp PORACA
+
+centro
+LD R3, carril_centro
+ADD R6,R6,#3
+ST R6, QUECARRIL
+BRnzp PORACA
+
+izquierda
+LD R3, carril_izquierdo
+ADD R6,R6,#1
+ST R6, QUECARRIL
+
+PORACA
 ST R3, GUARDAR_CONO
 LD R5, grosor_pantalla
 ADD R5,R5, #10
@@ -234,6 +262,7 @@ ESPERALETRA
 	ADD R3,R3,R4
 	JSR DIBUJAR_CONO
 	ST R3, GUARDAR_CONO
+	JSR VERIFICAR_CONO
 	LD R5, GUARDAR_CONTADOR 
 	ADD R5,R5,#-1
 	BRnp SIGUE
@@ -248,7 +277,7 @@ ESPERALETRA
 	MOVER2          ;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
 	LD R4, color_rojo_osc
 	espera
-	ADD R4,R4,#-5
+	ADD R4,R4,#-9
 	BRp espera
 
 	JSR MOVER_AUTO
@@ -285,6 +314,7 @@ BRnzp MOVER2			;Si R4 no es cero, se regresa al bucle MOVER2, que controla el ti
 
 inicio_auto .FILL xF23A		; Se reserva un espacio en memoria para almacenar la dirección de inicio del auto
 grosor_pantalla.FILL #128
+color_gris .FILL x4210 		; Color gris (código de color)
 ;Lógica para mover el auto hacia la derecha.
 ; Input: R0: Posición actual del auto.
 ; Output: R0: Posición actualizada del auto después de moverse hacia la derecha.
@@ -676,3 +706,90 @@ LD R2,GUARDAR_R2
 LD R3,GUARDAR_R3
 LD R4,GUARDAR_R4
 RET
+
+;R0-posicion auto
+;R3-posicion cono
+VERIFICAR_CONO
+ST R0,GUARDAR_R0
+ST R1, GUARDAR_R1
+ST R2, GUARDAR_R2
+ST R3, GUARDAR_R3
+ST R4, GUARDAR_R4
+ST R5, GUARDAR_R5
+LD R2, extraer_fila
+LD R6,diez
+AND R1,R0,R2  		;R1 cordenada Y del auto
+AND R4,R3,R2		;r4 cordenada Y del cono
+NOT R5,R1
+ADD R5,R5,#1
+ADD R5,R5,R4  		;cordenada X del cono - X del auto
+
+ENTRE
+ADD R5,R5,#-1
+BRz VERIFICAR_EJEY
+ADD R6,R6,#-1
+BRp ENTRE
+
+
+ADD R5,R5,#8
+ADD R5,R5,#0
+BRz VERIFICAR_EJEY
+LD R6,diez
+
+ENTRE2
+ADD R5,R5,#1
+BRz VERIFICAR_EJEY
+ADD R6,R6,#-1
+BRp ENTRE2
+BRnzp SALIR
+
+VERIFICAR_EJEY
+LD R6,diez
+ADD R6,R6,#5
+LD R2, extraer_columna
+AND R1,R0,R2  		;R1 cordenada Y del auto
+AND R4,R3,R2		;r4 cordenada Y del cono
+NOT R5,R1
+ADD R5,R5,#1
+ADD R5,R5,R4  		;cordenada Y del cono - Y del auto
+
+LD R2,ancho_pantalla_neg
+ENTRE3
+ADD R5,R5,R2
+BRz GAME_OVER1
+ADD R6,R6,#-1
+BRp ENTRE3
+
+LD R2,restaurar
+ADD R5,R5,R2
+LD R2, ancho_pantalla
+
+LD R6,diez
+
+
+ENTRE4
+ADD R5,R5,R2
+BRz GAME_OVER1
+ADD R6,R6,#-1
+BRp ENTRE4
+
+
+
+SALIR
+LD R0,GUARDAR_R0
+LD R1, GUARDAR_R1
+LD R2, GUARDAR_R2
+LD R3, GUARDAR_R3
+LD R4, GUARDAR_R4
+LD R5, GUARDAR_R5
+RET
+
+extraer_fila .FILL x007F
+extraer_columna .FILL xFF80
+diez .FILL	#8
+ancho_pantalla_neg .FILL #-128
+ancho_pantalla .FILL #128
+restaurar .FILL #1536
+
+GAME_OVER1
+HALT

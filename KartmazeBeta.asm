@@ -314,7 +314,7 @@ ESPERALETRA
 	MOVER2          ;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
 	LD R4, color_rojo_osc
 	espera
-	ADD R4,R4,#-9
+	ADD R4,R4,#-10
 	BRp espera
 
 	JSR MOVER_AUTO
@@ -807,7 +807,7 @@ ADD R5,R5,R4  		;cordenada Y del cono - Y del auto
 LD R2,ancho_pantalla_neg
 ENTRE3
 ADD R5,R5,R2
-BRz GAME_OVER1
+BRz GAME_OVER2
 ADD R6,R6,#-1
 BRp ENTRE3
 
@@ -820,7 +820,7 @@ LD R6,diez
 
 ENTRE4
 ADD R5,R5,R2
-BRz GAME_OVER1
+BRz GAME_OVER2
 ADD R6,R6,#-1
 BRp ENTRE4
 
@@ -832,6 +832,8 @@ LD R3, GUARDAR_R3
 LD R4, GUARDAR_R4
 LD R5, GUARDAR_R5
 RET
+GAME_OVER2
+HALT
 
 DIRECCIONAR
 ST R0,GUARDARRR_R0

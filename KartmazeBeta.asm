@@ -141,6 +141,8 @@ esp_entre_rect .FILL #642	; Espacio entre los rectángulos blancos en los carril
 GUARDAR_R7      .BLKW 1
 GUARDAR_CONO 	.BLKW 1
 QUECARRIL		.BLKW 1
+ENEMIGO			.BLKW 1
+GUARDAR_AUTO			.BLKW 1
 
 SALTOO
 LD R0, inicio_auto
@@ -151,6 +153,11 @@ ADD R5,R5,#14
 ST R5,GUARDAR_CONTADOR
 LD R6, cero ;ES 1
 ST R6, QUECARRIL
+
+LD R6, carril_derecha
+ST R6, ENEMIGO
+
+
 BRnzp ESPERALETRA
 
 ;carril_medio genera los rectangulos de carril del medio 
@@ -186,12 +193,19 @@ ADD R1,R1,#1
 ADD R2,R2,#-1
 BRp LOOP_RECT
 ADD	R1,R1,R3
-ADD R0,R0,#-1 ;a
+ADD R0,R0,#-1 
 BRp LOOP_RECT2
 ST R7,GUARDARR_R7
 LD R0, GUARDARR_R0
 JSR MOVER_AUTO 			; Llama a la función para mover el auto
 ST R0, GUARDARR_R0
+
+ST R3,GUARDARR_R3
+LD R3, GUARDAR_CONO
+JSR DIBUJAR_CONO
+ST R3,GUARDAR_CONO
+LD R3,GUARDARR_R3
+
 LD R7,GUARDARR_R7
 ADD R1, R1,R4
 ADD R7,R7,#-1
@@ -255,7 +269,6 @@ ESPERALETRA
 	LD R3,GUARDAR_CONO
 	JSR DIBUJAR_CONO
 	ST R3, GUARDAR_CONO
-
 	LD R3,GUARDAR_CONO
 	JSR BORRAR_CONO
 	LD R4, grosor_pantalla
@@ -269,7 +282,6 @@ ESPERALETRA
 	JSR CADA128FRAMES
 	SIGUE
 	ST R5, GUARDAR_CONTADOR
-
 
 	LDI R5,WAITKB  ;WAITKB es la direccion del registro que cuando se presiona una tecla, se cambia a 1 el bit 15
 	BRn MOVER
@@ -378,6 +390,8 @@ LD R1, GUARDAR_R1
 BRnzp MOVER2
 GAME_OVER
 HALT
+
+
 
 ; BORRAR_AUTO: "Pinta" el auto pero del color de la calle.
 ; Input: 
@@ -578,6 +592,7 @@ GUARDAR_R6      .BLKW 1
 
 
 
+
 TECLADO .FILL xFE02
 letraDneg .FILL #-100
 letraDpos .FILL #100
@@ -595,6 +610,8 @@ color_naranja .FILL x7A00
 color_naranja_osc .FILL x5100
 color_white2 .FILL x7FFF
 color_gris2 .FILL x4210
+azul_claro .FILL x084F
+azul_osc .FILL x084A
 abajo.FILL #256
 subir.FILL #-256
 columna.FILL x00FF
@@ -782,6 +799,12 @@ LD R2, GUARDAR_R2
 LD R3, GUARDAR_R3
 LD R4, GUARDAR_R4
 LD R5, GUARDAR_R5
+RET
+
+DIRECCIONAR
+LD R6,GUARDAR_AUTO
+NOT
+ST R6,GUARDAR_AUTO
 RET
 
 extraer_fila .FILL x007F

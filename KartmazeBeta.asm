@@ -314,7 +314,7 @@ ESPERALETRA
 	MOVER2          ;este loop realentiza cada frame restando 5 a R4(x4000) llegue a 0
 	LD R4, color_rojo_osc
 	espera
-	ADD R4,R4,#-10
+	ADD R4,R4,#-2
 	BRp espera
 
 	JSR MOVER_AUTO

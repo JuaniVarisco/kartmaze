@@ -1,5 +1,0 @@
-reset
-as KartmazeBeta.asm
-load lc3os.obj
-load KartmazeBeta.obj
-list x3010
